@@ -81,7 +81,9 @@ function CMD.start(gate, fd, proto)
 end
 
 skynet.start(function()
+	print("agent flag")
 	skynet.dispatch("lua", function(_,_, command, ...)
+		print("agent dispatch flag")
 		local f = CMD[command]
 		skynet.ret(skynet.pack(f(...)))
 	end)

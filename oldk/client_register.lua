@@ -8,8 +8,9 @@ skynet.start(function()
 	
 	local header = {}
 	local up = {}
-	up["username"] = "Kurt"
-	up["password"] = "Cobain"
+	up["request"] = "register"
+	up["username"] = "Joy"
+	up["password"] = "Division"
 	local status, body = httpc.post("127.0.0.1:8001","/",up,header)
 	-- local status, body = httpc.get("127.0.0.1:8001", "/", header)
 	print("[header] =====>")
