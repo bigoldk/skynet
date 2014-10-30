@@ -148,9 +148,9 @@ if mode == "agent" then
 					-- 	response(id,code,"login success!你好啊小盆友")
 					if res[1]["password"]==temp["password"] then
 						if res[1]["md5"]==temp["md5"] then
-							response(id,code,"login successs!登陆成功！")
+							response(id,code,"{isMd5Correct=true}")
 						else
-							response(id,code,"password correct,md5 not match!登陆失败！")
+							response(id,code,"{isMd5Correct=false}")
 						end
 						-- response(id,code,"login success!你好啊小盆友")
 					else
@@ -168,6 +168,17 @@ if mode == "agent" then
 					response(id,code,"update completed")
 				else
 					response(id,code,"md5 not match,update failed")					
+				end
+			end
+
+			if temp["request"]=="postvalues" then
+				local res = db:query("select md5 from cats where username=\'"..temp["username"].."\'")
+				if res[1]["md5"]==temp["md5old"] then
+					res = db:query("update cats set item=\'"..temp["item"].."\' where username=\'"..temp["username"].."\'")
+					res = db:query("update cats set md5=\'"..temp["md5new"].."\' where username=\'"..temp["username"].."\'")
+					response(id,code,"{isMd5Correct=true}")
+				else
+					response(id,code,"{isMd5Correct=false}")					
 				end
 			end
 			-- if temp['request']=='checkmd5' then
