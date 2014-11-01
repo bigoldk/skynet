@@ -137,8 +137,8 @@ if mode == "agent" then
 
 
 			if temp["request"]=="login" then
-				local res = db:query("select password,md5 from cats where username=\'"..temp["username"].."\'")
-				print(res[1]["password"],res[1]["md5"])
+				local res = db:query("select password,md5,GameData from cats where username=\'"..temp["username"].."\'")
+				print(res[1]["password"],res[1]["md5"],res[1]["GameData"])
 				if not(unpack(res)) then
 					print("user "..temp["username"].." not found")
 					response(id,code,"user "..temp["username"].." not found不给力啊老湿")
@@ -150,7 +150,7 @@ if mode == "agent" then
 						if res[1]["md5"]==temp["md5"] then
 							response(id,code,"{isMd5Correct=true}")
 						else
-							response(id,code,"{isMd5Correct=false}")
+							response(id,code,"{isMd5Correct=false,GameData="..res[1]["GameData"].."}")
 						end
 						-- response(id,code,"login success!你好啊小盆友")
 					else
