@@ -181,6 +181,16 @@ if mode == "agent" then
 					response(id,code,"{isMd5Correct=false}")					
 				end
 			end
+
+			if temp["postmd5"]=="postmd5" then
+				local res = db:query("select md5 from cats where username=\'"..temp["username"].."\'")
+				if res[1]["md5"]==temp["md5"] then
+					response(id,code,"md5s match")
+				else
+					res = db:query("udpate cats set md5=\'"..temp["md5"].."\'where username=\'"..temp["username"].."\'")	
+					response(id,code,"{true}")
+				end
+			end
 			-- if temp['request']=='checkmd5' then
 				
 			-- end
