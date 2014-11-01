@@ -108,7 +108,7 @@ if mode == "agent" then
 				port=3306,
 				database="logintest",
 				user="root",
-				password="123",
+				password="900605,wyr",
 				max_packet_size = 1024 * 1024
 			}
 			if db then
@@ -172,13 +172,14 @@ if mode == "agent" then
 			end
 
 			if temp["request"]=="postvalues" then
-				local res = db:query("select md5 from cats where username=\'"..temp["username"].."\'")
+				local res = db:query("select md5,data from cats where username=\'"..temp["username"].."\'")
 				if res[1]["md5"]==temp["md5old"] then
-					res = db:query("update cats set item=\'"..temp["item"].."\' where username=\'"..temp["username"].."\'")
+					res = db:query("update cats set data=\'"..temp["data"].."\' where username=\'"..temp["username"].."\'")
 					res = db:query("update cats set md5=\'"..temp["md5new"].."\' where username=\'"..temp["username"].."\'")
-					response(id,code,"{true}")
+					response(id,code,"{isMd5Correct=true}")
 				else
-					response(id,code,"{isMd5Correct=false}")					
+
+					response(id,code,"{isMd5Correct=false,GameData=\'"..res[1]["data"].."\'}")					
 				end
 			end
 
