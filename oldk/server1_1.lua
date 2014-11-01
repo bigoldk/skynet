@@ -187,8 +187,9 @@ if mode == "agent" then
 				if res[1]["md5"]==temp["md5"] then
 					response(id,code,"md5s match")
 				else
-					res = db:query("udpate cats set md5=\'"..temp["md5"].."\'where username=\'"..temp["username"].."\'")	
-					response(id,code,"{true}")
+					res = db:query("update cats set md5=\'"..temp["md5"].."\' where username=\'"..temp["username"].."\'")
+					print("flag")
+					response(id,code,"{isMd5Correct=false}")					
 				end
 			end
 			-- if temp['request']=='checkmd5' then
