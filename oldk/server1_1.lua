@@ -176,7 +176,7 @@ if mode == "agent" then
 				if res[1]["md5"]==temp["md5old"] then
 					res = db:query("update cats set item=\'"..temp["item"].."\' where username=\'"..temp["username"].."\'")
 					res = db:query("update cats set md5=\'"..temp["md5new"].."\' where username=\'"..temp["username"].."\'")
-					response(id,code,"{isMd5Correct=true}")
+					response(id,code,"{true}")
 				else
 					response(id,code,"{isMd5Correct=false}")					
 				end
