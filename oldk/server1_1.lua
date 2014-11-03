@@ -183,7 +183,7 @@ if mode == "agent" then
 				end
 			end
 
-			if temp["postmd5"]=="postmd5" then
+			if temp["request"]=="postmd5" then
 				local res = db:query("select md5 from cats where username=\'"..temp["username"].."\'")
 				if res[1]["md5"]==temp["md5"] then
 					response(id,code,"md5s match")
