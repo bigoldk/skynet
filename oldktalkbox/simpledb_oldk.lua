@@ -15,7 +15,7 @@ function command.GET(tab)
 			for j = 2,4 do
 				st = st.."="..db[i][j]
 			end
-			str = str..st.."&"
+			str = str..st.."=&"
 		end
 		print("str",str)
 		return str
