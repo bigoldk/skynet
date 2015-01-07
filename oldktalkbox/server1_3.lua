@@ -135,10 +135,8 @@ if mode == "agent" then
 			if temp["request"] == "liaotianpost"  then
 				-- print("hello")
 				local r = skynet.call("SIMPLEDB_OLDK","lua","post",temp["message"],temp["username"])
-				print("faldjflsa",temp["message"])
-				print("fafsaf",urllib.parse(temp["message"]))
 				print("hey there from the server")
-				response(id,code,"true")
+				response(id,code,r)
 			end
 
 			if temp["request"] == "liaotianget" then
@@ -154,12 +152,18 @@ if mode == "agent" then
 				if res then
 					print("res not empty")
 					db:incr(temp["to"]..":tab")
-					local tab = db:get(temp["to"]..":tab")
-					db:hset(temp["to"].."mailbox",tab,tab.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+					db:incr(temp["username"]..":tab")
+					local tabfrom = db:get(temp["username"]..":tab")
+					local tabto = db:get(temp["to"]..":tab")
+					db:hset(temp["username"].."mailbox",tabfrom,tabfrom.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+					db:hset(temp["to"].."mailbox",tabto,tabto.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 					response(id,code,tab.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 				else
 					print("res empty")
 					db:set(temp["to"]..":tab",1)
+					db:incr(temp["username"]..":tab")
+					local tabfrom = db:get(temp["username"]..":tab")
+					db:hset(temp["username"].."mailbox",tabfrom,tabfrom.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 					db:hset(temp["to"].."mailbox",1,"1="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 					response(id,code,"1="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 				end
