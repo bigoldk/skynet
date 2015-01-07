@@ -24,10 +24,10 @@ end
 
 function command.POST(message,username)
 	tab = tab+1
-	local num = #db
-	db[num+1] = {tab,message,username,os.time()}
+	local num = #db+1
+	db[num] = {tab,message,username,os.time()}
 	print("hey there")
-	return true
+	return db[num][1].."="..db[num][2].."="..db[num][3].."="..db[num][4].."=&"
 end
 
 skynet.start(function()

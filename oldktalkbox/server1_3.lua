@@ -157,7 +157,7 @@ if mode == "agent" then
 					local tabto = db:get(temp["to"]..":tab")
 					db:hset(temp["username"].."mailbox",tabfrom,tabfrom.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 					db:hset(temp["to"].."mailbox",tabto,tabto.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
-					response(id,code,tab.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+					response(id,code,tabto.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
 				else
 					print("res empty")
 					db:set(temp["to"]..":tab",1)
