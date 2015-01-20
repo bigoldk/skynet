@@ -1,7 +1,7 @@
 package.path = "./examples/?.lua;" .. package.path
 
 local skynet = require "skynet"
-local netpack = require "netpack"
+-- local netpack = require "netpack"
 local proto = require "proto"
 
 local CMD = {}

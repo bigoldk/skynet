@@ -1,0 +1,12 @@
+root = "./"
+thread = 8
+logger = nil
+logpath = "."
+harbor = 0
+start = "server_temp1_1"	-- main script
+bootstrap = "snlua bootstrap"	-- The service for bootstrap
+luaservice = root.."service/?.lua;"..root.."test/?.lua;"..root.."oldkarena/?.lua;"
+snax = root.."examples/?.lua;"..root.."test/?.lua"
+cpath = root.."cservice/?.so"
+-- daemon = "./skynet.pid"
+lua_path = root.."oldkarena/Fighters/?.lua;"..root.."lualib/?.lua;"..root.."oldkarena/?.lua;"..root.."oldkarena/utils/?.lua;"..root.."oldkarena/FighterScripts/?.lua"

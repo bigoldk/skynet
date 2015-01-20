@@ -2,6 +2,7 @@
 
 local skynet = require "skynet"
 local socket = require "socket"
+local redis = require "redis"
 local httpd = require "http.httpd"
 local sockethelper = require "http.sockethelper"
 local urllib = require "http.url"
@@ -103,24 +104,39 @@ if mode == "agent" then
 			end
 
 			-------------------------------------------------
-			db = mysql.connect{	
-				host="127.0.0.1",
-				port=3306,
-				database="logintest",
-				user="root",
-				password="123",
-				max_packet_size = 1024 * 1024
+			-- db = mysql.connect{	
+			-- 	host="127.0.0.1",
+			-- 	port=3306,
+			-- 	database="logintest",
+			-- 	user="root",
+			-- 	password="123",
+			-- 	max_packet_size = 1024 * 1024
+			-- }
+			-- if db then
+			-- 	print("mysql server connected")
+			-- else
+			-- 	print("fuck, it cannot connect to the mysql server")
+			-- 	response(id,code,"server error,please try later")
+			-- end
+
+			local conf = {
+				host = "127.0.0.1",
+				port = 6379,
+				db = 3
 			}
+
+			local db = redis.connect(conf)
 			if db then
-				print("mysql server connected")
+				print("redis connection success")
 			else
-				print("fuck, it cannot connect to the mysql server")
-				response(id,code,"server error,please try later")
+				print("redis connection failed")
 			end
 
-			if temp["request"] == "liaotianpost" then
-				print("hello")
+			if temp["request"] == "liaotianpost"  then
+				-- print("hello")
 				local r = skynet.call("SIMPLEDB_OLDK","lua","post",temp["message"],temp["username"])
+				print("faldjflsa",temp["message"])
+				print("fafsaf",urllib.parse(temp["message"]))
 				print("hey there from the server")
 				response(id,code,"true")
 			end
@@ -129,6 +145,48 @@ if mode == "agent" then
 				local r = skynet.call("SIMPLEDB_OLDK","lua","get",temp["tab"])
 				response(id,code,r)
 			end
+
+			if temp["request"] == "liaotianpostprivate" then
+				print("private message sender:",temp["username"])
+				print("private message receiver,",temp["to"])
+				res = db:exists(temp["to"]..":tab")
+				print(type(res),res)
+				if res then
+					print("res not empty")
+					db:incr(temp["to"]..":tab")
+					local tab = db:get(temp["to"]..":tab")
+					db:hset(temp["to"].."mailbox",tab,tab.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+					response(id,code,tab.."="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+				else
+					print("res empty")
+					db:set(temp["to"]..":tab",1)
+					db:hset(temp["to"].."mailbox",1,"1="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+					response(id,code,"1="..temp["message"].."="..temp["username"].."="..os.time().."="..temp["to"].."=&")
+				end
+
+			end
+
+			if temp["request"] == "liaotiangetprivate" then
+				print(temp["username"].."is getting message from mailbox")
+				res = db:exists(temp["username"]..":tab")
+				print(type(res),res)
+				if res then
+					local tabb = db:get(temp["username"]..":tab")
+					local str = ""
+					for i = temp["tab"],tabb do
+						local s = db:hget(temp["username"].."mailbox",i)
+						print(s)
+						if s then
+							str = str..s
+						end
+					end
+					print("str,",str)
+					response(id,code,str)
+				else
+					response(id,code,"")
+				end
+			end
+
 
 			if temp["request"] == "register" then
 				

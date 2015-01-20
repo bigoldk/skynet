@@ -1,6 +1,7 @@
 -- login with md5 detect 2014.10.27
 
 local skynet = require "skynet"
+local redis = require "redis"
 local socket = require "socket"
 local httpd = require "http.httpd"
 local sockethelper = require "http.sockethelper"
@@ -118,6 +119,47 @@ if mode == "agent" then
 				response(id,code,"server error,please try later")
 			end
 
+			if temp["request"] == "redistest" then
+				print("redistest")
+				local conf = {
+					host = "127.0.0.1" ,
+					port = 6379 ,
+					db = 0
+				}
+
+				local db = redis.connect(conf)
+				if db then
+					print("redis connection success")
+				else
+					print("redis connection failed")
+				end
+				print("=============")
+				db:select("5")
+				db:sadd("setst",temp["t1"])
+				db:sadd("setst",temp["t2"])
+				db:sadd("setst",temp["t3"])
+				db:sadd("setst",temp["t4"])
+				db:sadd("setst",temp["t5"])
+				print(unpack(db:smembers("setst")))
+				print("=============")
+				db:set("A","12345")
+				print(db:get("A"))
+				db:incr("A")
+				print(db:get("A"))
+				db:incrby("A","12340")
+				print(db:get("A"))
+				db:set("B","hey there")
+				print("B")
+				print(unpack(db:mget("A","B")))
+				db:hmset("AB","CD","100","E","101","F","102")
+				print(db:hget("AB","E"),unpack(db:hmget("AB","CD","E","F")))
+				
+
+
+				response(id,code, "redis should be ok")
+
+			end
+
 			if temp["request"] == "register" then
 				
 				local res = db:query("select * from cats where username=\'"..temp["username"].."\'")
@@ -193,7 +235,43 @@ if mode == "agent" then
 					response(id,code,"{isMd5Correct=false}")					
 				end
 			end
-			
+			-- if temp['request']=='checkmd5' then
+				
+			-- end
+
+			-----------------------------------------------
+
+			-- if code then
+			-- 	if code ~= 200 then
+			-- 		response(id, code)
+			-- 	else
+			-- 		local tmp = {}
+			-- 		if header.host then
+			-- 			table.insert(tmp, string.format("host: %s", header.host))
+			-- 		end
+			-- 		local path, query = urllib.parse(url)
+			-- 		table.insert(tmp, string.format("path: %s", path))
+			-- 		if query then
+			-- 			local q = urllib.parse_query(query)
+			-- 			for k, v in pairs(q) do
+			-- 				table.insert(tmp, string.format("query: %s= %s", k,v))
+			-- 			end
+			-- 		end
+			-- 		table.insert(tmp, "-----header----")
+			-- 		for k,v in pairs(header) do
+			-- 			table.insert(tmp, string.format("%s = %s",k,v))
+			-- 		end
+			-- 		table.insert(tmp, "-----body----\n" .. body)
+			-- 		response(id, code, table.concat(tmp,"\n"))
+			-- 		print("flag")
+			-- 	end
+			-- else
+			-- 	if url == sockethelper.socket_error then
+			-- 		skynet.error("socket closed")
+			-- 	else
+			-- 		skynet.error(url)
+			-- 	end
+			-- end
 			socket.close(id)
 		end)
 	end)

@@ -1,4 +1,3 @@
--- login with md5 detect 2014.10.27
 
 local skynet = require "skynet"
 local socket = require "socket"
@@ -8,6 +7,9 @@ local urllib = require "http.url"
 local table = table
 local string = string
 local mysql = require "mysql"
+-- local fightlogic = require "fightlogic.logic"
+local arena = require "arena"
+local redis = require "redis"
 local mode = ... 
 
 local function dump(obj)
@@ -72,8 +74,8 @@ if mode == "agent" then
 			
 			socket.start(id)
 			-- limit request body size to 8192 (you can pass nil to unlimit)
-			local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id), 8192)
-			print("body:",body)
+			local code, url, method, header, body = httpd.read_request(sockethelper.readfunc(id),8192)
+			print("code",code,"url",url,"method",method,"header",header,"body:",body)
 			-------------------------------------------------
 			--text analysis
 
@@ -103,26 +105,147 @@ if mode == "agent" then
 			end
 
 			-------------------------------------------------
-			db = mysql.connect{	
-				host="127.0.0.1",
-				port=3306,
-				database="logintest",
-				user="root",
-				password="123",
-				max_packet_size = 1024 * 1024
-			}
-			if db then
-				print("mysql server connected")
-			else
-				print("fuck, it cannot connect to the mysql server")
-				response(id,code,"server error,please try later")
+			-- db = mysql.connect{	
+			-- 	host="127.0.0.1",
+			-- 	port=3306,
+			-- 	database="logintest",
+			-- 	user="root",
+			-- 	password="123",
+			-- 	max_packet_size = 1024 * 1024
+			-- }
+			-- if db then
+			-- 	print("mysql server connected")
+			-- else
+			-- 	print("fuck, it cannot connect to the mysql server")
+			-- 	response(id,code,"server error,please try later")
+			-- end
+
+			if temp["request"] == "savetable" then
+				local res = db:query("select * from cats where username=\'"..temp["username"].."\'")
+				-- print("flag")
+				if not(unpack(res)) then
+					print("1")
+					res = db:query("insert into cats (username,data)values(\'"..temp["username"].."\', \'"..temp["data"].."\')")
+					res = db:query("select * from cats")
+					print(dump(res))
+					response(id,code,"user "..temp["username"].." inserted")
+				else
+					print("2")
+					res = db:query("update cats set data =\'"..temp["data"].."\' where username=\'"..temp["username"].."\'")
+					res = db:query("select * from cats")
+					print(dump(res))
+					response(id,code,"user "..temp["username"].." updated")
+
+				end
+			end
+
+			if temp["request"] == "gettable" then
+				local res = db:query("select * from cats where username=\'"..temp["username"].."\'")
+				if not(unpack(res)) then
+					print("user "..temp["username"].." not found")
+					response(id,code,"user not found")
+				else
+					res = db:query("select data from cats where username=\'"..temp["username"].."\'")
+					print("send data of user "..temp["username"])
+					response(id,code,res[1]["data"])
+				end
+
+			end
+
+			if temp["request"] == "deletetable" then
+
+				local res = db:query("delete from cats where username =\'"..temp["username"].."\'")
+			end
+
+			if temp["request"] == "arena" then
+				print("arena flag")
+				local conf = {
+					host = "127.0.0.1",
+					port = 6379,
+					db = 4,
+				}
+				local db = redis.connect(conf)
+				local attacker = temp["username"]
+				local defencer = temp["opponent"]
+				local atkteam = {}
+				local defteam = {}
+				for i = 1,5 do
+					local stratk = temp["attacker"..i.."pos"]
+					local strdef = temp["defencer"..i.."pos"]
+					local posatk = {tonumber(string.sub(stratk,1,1)),tonumber(string.sub(stratk,2,2))}
+					local posdef = {tonumber(string.sub(strdef,1,1)),tonumber(string.sub(strdef,2,2))}
+					atkteam[i] = {fighterName = temp["attacker"..i],initPos = posatk}
+					defteam[i] = {fighterName = temp["defencer"..i],initPos = posdef}
+				end
+				-- for i = 1,5 do
+				-- 	print("atkteam,",atkteam[i]["fighterName"],atkteam[i]["initPos"][1],atkteam[i]["initPos"][2])
+				-- 	print("defteam,",defteam[i]["fighterName"])
+				-- end
+				local attackerHeroList = {}
+				local defencerHeroList = {}
+
+				for i = 1,5 do
+					local tem = {}
+					local Levell = 1
+					local Starr = 1
+					local res = db:exists(attacker..":"..atkteam[i].fighterName)
+					if res then
+						Levell = tonumber(db:hget(attacker..":"..atkteam[i].fighterName,"Level"))
+						Starr = tonumber(db:hget(attacker..":"..atkteam[i].fighterName,"Star"))
+					else
+						db:hset(attacker..":"..atkteam[i].fighterName,"Level",1)
+						db:hset(attacker..":"..atkteam[i].fighterName,"Star",1)
+					end
+
+					tem["Fighter"] = {Name = atkteam[i].fighterName,Level = Levell, Star = Starr,Gift = "None",Item = {}}
+					tem["Index"] = i
+					tem["onStage"] = 0
+					tem["initPos"] = atkteam[i].initPos
+					print("attackers here,",dump(tem["Fighter"]))
+					attackerHeroList[i] = tem
+				end
+				for i = 1,5 do
+					print("hey you",dump(attackerHeroList[i]))
+				end
+
+				for i = 1,5 do
+					local tem = {}
+					local Levell = 1
+					local Starr = 1
+					local res = db:exists(defencer..":"..defteam[i].fighterName)
+					if res then
+						Levell = tonumber(db:hget(defencer..":"..defteam[i].fighterName,"Level"))
+						Starr = tonumber(db:hget(defencer..":"..defteam[i].fighterName,"Star"))
+					else
+						db:hset(defencer..":"..defteam[i].fighterName,"Level",1)
+						db:hset(defencer..":"..defteam[i].fighterName,"Star",1)
+					end
+
+					tem["Fighter"] = {Name = defteam[i].fighterName,Level = Levell, Star = Starr,Gift = "None",Item = {}}
+					tem["Index"] = i
+					tem["onStage"] = 0
+					tem["initPos"] = defteam[i].initPos
+					print("defencers here,",dump(tem["Fighter"]))
+					defencerHeroList[i] = tem
+				end
+
+				for i = 1,5 do
+					print("hey defencers",dump(defencerHeroList[i]))
+				end
+				local attackerCaptainList = {}
+				local defencerCaptainList = {}
+
+				local res = arena.new(defencerHeroList, attackerHeroList, attackerCaptainList, defencerCaptainList)
+				print("hey you i got here")
+
+
+				response(id, code, res.process)
 			end
 
 			if temp["request"] == "register" then
 				
 				local res = db:query("select * from cats where username=\'"..temp["username"].."\'")
 				if not(unpack(res)) then
-					local res = db:query("insert into cats (username,password)values(\'"..temp["username"].."\', \'"..temp["password"].."\')")
 					res = db:query("select * from cats")
 					print(dump(res))
 					print(temp["username"].." inserted")
@@ -183,7 +306,7 @@ if mode == "agent" then
 				end
 			end
 
-			if temp["postmd5"]=="postmd5" then
+			if temp["request"]=="postmd5" then
 				local res = db:query("select md5 from cats where username=\'"..temp["username"].."\'")
 				if res[1]["md5"]==temp["md5"] then
 					response(id,code,"md5s match")
@@ -194,6 +317,7 @@ if mode == "agent" then
 				end
 			end
 			
+			-- db:disconnect()
 			socket.close(id)
 		end)
 	end)
@@ -204,9 +328,9 @@ else
 
 
 		local agent = {}
-		for i= 1, 20 do
-			agent[i] = skynet.newservice(SERVICE_NAME, "agent")
-		end
+		-- for i= 1, 1 do
+			agent[1] = skynet.newservice(SERVICE_NAME, "agent")
+		-- end
 		local balance = 1
 		local id = socket.listen("0.0.0.0", 8001)
 		socket.start(id , function(id, addr)
